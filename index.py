@@ -7,9 +7,7 @@ Created on Sat Jan  7 10:09:44 2023
 
 from flask import Flask, request, render_template, jsonify
 import os
-import pathlib
 import base64
-from werkzeug.utils import secure_filename
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import load_model
 from flask_cors import CORS
@@ -143,4 +141,6 @@ def pingpong():
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host='0.0.0.0')
+    # app.run(debug=False, host='0.0.0.0')
+    app.run(debug=True)
+
