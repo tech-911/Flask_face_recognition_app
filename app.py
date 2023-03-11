@@ -5,27 +5,25 @@ Created on Sat Jan  7 10:09:44 2023
 @author: Nenchin
 """
 
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 import os
 import base64
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
-from tensorflow.keras.models import load_model
 from flask_cors import CORS
+import os.path
+from face_recognition_knn import train, predict
+
 
 
 app = Flask(__name__)
 CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.config['UPLOAD_FOLDER'] = 'static/users/'
 datasets = os.path.join(BASE_DIR, 'user_data')
 
 
 class_names = []
-for data in datasets:
-    class_names.append(data)
-
-for folder in app.config['UPLOAD_FOLDER']:
+for folder in datasets:
     class_names.append(folder)
+
 
 ALLOWED_EXT = set(['jpg', 'jpeg', 'png', 'jfif'])
 
@@ -34,27 +32,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXT
 
-
-def train(data):
-    try:
-
-        "code for data preprocessing and training"
-
-    except Exception as e:
-        print(e)
-    return "Done", model
-
-
-def predict(filename, model):
-    img = load_img(filename, target_size=(120, 120))
-    img = img_to_array(img)
-    img = img.reshape(1, 120, 120, 3)
-
-    img = img.astype('float32')
-    img = img / 255.0
-    model = load_model(os.path.join(BASE_DIR, 'model_name'))
-    result = model.predict(img)
-    return result
 
 
 @app.route('/')
@@ -102,17 +79,17 @@ def register():
 @app.route('/train', methods=["POST"])
 def training():
     if request.method == "POST":
-        message, model == train(app.config['UPLOAD_FOLDER'])
         "write a code to save the model"
+        print("Training KNN classifier...")
+        classifier, message = train(datasets, model_save_path="trained_knn_model.clf", n_neighbors=2)
         if message == "Done":
-            return jsonify("training successful")
+            return jsonify("Training complete!", classifier)
         else:
             return "an error occurred while training"
 
 
 @app.route('/predict', methods=["POST"])
 def prediction():
-    target_img = os.path.join(os.getcwd(), 'static/images')
     error = ''
     target_img = os.path.join(os.getcwd(), 'static/images')
     if request.method == 'POST':
@@ -121,14 +98,15 @@ def prediction():
             file.save(os.path.join(target_img, file.filename))
             img_path = os.path.join(target_img, file.filename)
             img = file.filename
-            pred_result = predict(img_path)
+            name, (top, right, bottom, left) = predict(img_path, model_path="trained_knn_model.clf")
+
         else:
             error = "Please upload images of jpg , jfif, jpeg and png extension only"
         if (len(error) == 0):
-            if pred_result not in class_names:
-                return jsonify(img=img, error="Access denied")
-            else:
+            if name in class_names:
                 return jsonify(img=img, success_message="Access granted")
+            if name == "unknown":
+                return jsonify(img=img, error="Access denied")
         else:
             return jsonify(error=error)
 
