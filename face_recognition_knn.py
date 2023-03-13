@@ -185,7 +185,7 @@ if __name__ == "__main__":
     # STEP 1: Train the KNN classifier and save it to disk
     # Once the model is trained and saved, you can skip this step next time.
     print("Training KNN classifier...")
-    classifier = train("user_data", model_save_path="trained_knn_model.clf", n_neighbors=2)
+    classifier = train("knn_examples/train", model_save_path="trained_knn_model.clf", n_neighbors=2)
     print("Training complete!")
 
     # STEP 2: Using the trained classifier, make predictions for unknown images
